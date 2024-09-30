@@ -39,18 +39,13 @@ def get_jwt_token():
     password = CONFIG['JWT_TOKEN']['password']
     
     headers = json.loads(CONFIG['JWT_TOKEN']['headers'])
-    payload = json.loads(CONFIG['JWT_TOKEN']['payload'])
-    
-    # Replace placeholders in payload with actual username and password
-    payload_str = json.dumps(payload)
-    payload_str = payload_str.replace('{username}', username).replace('{password}', password)
+    payload_str = CONFIG['JWT_TOKEN']['payload'].replace('{username}', username).replace('{password}', password)
     payload = json.loads(payload_str)
     
     try:
         response = requests.post(auth_url, json=payload, headers=headers, verify=CERT_PATH)
         response.raise_for_status()
         result = response.json()
-        # Adjust this line based on the actual structure of the response
         return result.get("output_token_state", {}).get("token")
     except requests.RequestException as e:
         print(f"Error obtaining JWT token: {e}")
@@ -98,13 +93,12 @@ def send_verification_code(phone_number, verification_code):
     api_url = CONFIG['VERIFICATION']['url']
     
     # Construct request headers
-    headers = json.loads(CONFIG['VERIFICATION']['headers'])
-    headers['Authorization'] = headers['Authorization'].format(jwt_token=jwt_token)
+    headers_str = CONFIG['VERIFICATION']['headers'].replace('{jwt_token}', jwt_token)
+    headers = json.loads(headers_str)
     
     # Construct request parameters
-    payload = json.loads(CONFIG['VERIFICATION']['payload'])
-    payload['phone'] = phone_number
-    payload['code'] = verification_code
+    payload_str = CONFIG['VERIFICATION']['payload'].replace('{phone_number}', phone_number).replace('{verification_code}', verification_code)
+    payload = json.loads(payload_str)
     
     try:
         response = requests.post(api_url, json=payload, headers=headers, verify=CERT_PATH)
