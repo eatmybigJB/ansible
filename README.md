@@ -40,16 +40,18 @@ def get_jwt_token():
     
     headers = json.loads(CONFIG['JWT_TOKEN']['headers'])
     payload = json.loads(CONFIG['JWT_TOKEN']['payload'])
-    payload.update({
-        "username": username,
-        "password": password
-    })
+    
+    # Replace placeholders in payload with actual username and password
+    payload_str = json.dumps(payload)
+    payload_str = payload_str.replace('{username}', username).replace('{password}', password)
+    payload = json.loads(payload_str)
     
     try:
         response = requests.post(auth_url, json=payload, headers=headers, verify=CERT_PATH)
         response.raise_for_status()
         result = response.json()
-        return result.get("token")
+        # Adjust this line based on the actual structure of the response
+        return result.get("output_token_state", {}).get("token")
     except requests.RequestException as e:
         print(f"Error obtaining JWT token: {e}")
         return None
@@ -216,32 +218,3 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps('Internal server error')
         }
-
-```bash
-[JWT_TOKEN]
-url = http://dev-auth-server/api/get_token
-username = dev_username
-password = dev_password
-headers = {"Content-Type": "application/json"}
-payload = {"grant_type": "password"}
-
-[VERIFICATION]
-url = http://dev-internal-verification-server/api/send_code
-headers = {"Content-Type": "application/json", "Authorization": "Bearer {jwt_token}"}
-payload = {"type": "login", "phone": "{phone_number}", "code": "{verification_code}"}
-test_phone_number = 13800138000
-
-[AWS]
-kms_arn = arn:aws:kms:region:account-id:key/key-id
-
-[EMAIL]
-smtp_server = smtp.example.com
-smtp_port = 587
-smtp_username = dev_email_username
-smtp_password = dev_email_password
-sender_email = sender@example.com
-subject = 您的验证码
-body = 您的验证码是：{verification_code}。请勿将验证码泄露给他人。
-
-[TEST]
-phone_number = 13800138000
