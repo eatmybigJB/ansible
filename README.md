@@ -35,8 +35,9 @@ def get_one_token(url, headers, payload, ca_cert_path):
         print(f"{color_text('JWT Token', 'yellow')}: {color_text(jwt_token, 'green')}")
         return jwt_token
     else:
-        print(f"Failed Response: {response.status_code}")
-        print(response.json())
+        error_message = f"Failed to get token: {response.status_code} - {response.text}"
+        print(error_message)
+        raise Exception(error_message)
 
 def send(jwt_token, url, phone_number, decrypted_plaintext, ca_cert_path):
     mdp_send_headers['X-HSBC-E2E-Trust-Token'] = jwt_token
@@ -46,12 +47,13 @@ def send(jwt_token, url, phone_number, decrypted_plaintext, ca_cert_path):
     response = requests.post(url=url, json=mdp_send_payload, headers=mdp_send_headers, verify=ca_cert_path)
 
     if response.status_code == 200:
-        print("Success Response: ", response.json())
+        print(f"{color_text('Success Response: ', 'yellow')}: {color_text(response.json(), 'green')}")
         print(mdp_send_payload)
         return response
     else:
-        print(f"Failed Response: {response.status_code}")
-        print(response.json())
+        error_message = f"Failed to send SMS: {response.status_code} - {response.text}"
+        print(error_message)
+        raise Exception(error_message)
 
 def send_email(subject, body, to_email, from_email, smtp_server, smtp_port, smtp_user, smtp_password):
     msg = MIMEMultipart()
@@ -60,7 +62,7 @@ def send_email(subject, body, to_email, from_email, smtp_server, smtp_port, smtp
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
-    context = ssl.create_unverified_context(check_hostname=False)
+    context = ssl._create_unverified_context(check_hostname=False)
 
     try:
         with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
@@ -103,7 +105,7 @@ from_email = "ADRESTEST-SVC-B2B@adrestest.addev.hsbc"
 smtp_server = "dynip-devapp-smtp-int-ext-relay.hk.hsbc"
 smtp_port = 2525
 smtp_user = "ADRESTEST-SVC-B2B"
-smtp_password = "hcraM@evaeLenOsieidde"
+smtp_password = "hcraM@evaeLenOsieiddE"
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 ca_cert_path = os.path.join(script_dir, 'cert.pem')
@@ -130,12 +132,26 @@ def lambda_handler(event, context):
             to_email = userAttributes['email']
             body = f"your code is {decrypted_plaintext}"
             print(to_email)
-            send_email(subject, body, to_email, from_email, smtp_server, smtp_port, smtp_user, smtp_password)
+            try:
+                send_email(subject, body, to_email, from_email, smtp_server, smtp_port, smtp_user, smtp_password)
+            except Exception as e:
+                print(f"Failed to send email: {str(e)}")
+                return {
+                    'statusCode': 500,
+                    'body': json.dumps('Failed to send email')
+                }
 
         if triggerSource == 'CustomSMSSender_Authentication':
             phone_number = userAttributes['phone_number']
-            jwt_token = get_one_token(mdp_one_token_url, mdp_one_token_headers, mdp_one_token_payload, ca_cert_path)
-            send(jwt_token, mdp_send_url, phone_number, decrypted_plaintext, ca_cert_path)
+            try:
+                jwt_token = get_one_token(mdp_one_token_url, mdp_one_token_headers, mdp_one_token_payload, ca_cert_path)
+                send(jwt_token, mdp_send_url, phone_number, decrypted_plaintext, ca_cert_path)
+            except Exception as e:
+                print(f"Failed to send SMS: {str(e)}")
+                return {
+                    'statusCode': 500,
+                    'body': json.dumps('Failed to send SMS')
+                }
 
         return {
             'statusCode': 200,
