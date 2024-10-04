@@ -11,6 +11,7 @@ from aws_encryption_sdk.identifiers import CommitmentPolicy
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import templates.dev.mdp as mdpconfig
+import templates.dev.smtp as smtpconfig  # 新增导入
 
 def color_text(words, color_name):
     color_codes = {
@@ -118,14 +119,14 @@ def lambda_handler(event, context):
             print(to_email)
             try:
                 send_email(
-                    mdpconfig.smtp_config['subject'],
+                    smtpconfig.smtp_subject,
                     body,
                     to_email,
-                    mdpconfig.smtp_config['from_email'],
-                    mdpconfig.smtp_config['smtp_server'],
-                    mdpconfig.smtp_config['smtp_port'],
-                    mdpconfig.smtp_config['smtp_user'],
-                    mdpconfig.smtp_config['smtp_password']
+                    smtpconfig.smtp_from_email,
+                    smtpconfig.smtp_server,
+                    smtpconfig.smtp_port,
+                    smtpconfig.smtp_user,
+                    smtpconfig.smtp_password
                 )
             except Exception as e:
                 print(f"Failed to send email: {str(e)}")
@@ -159,4 +160,3 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': 'Error during KMS decryption'
         }
-
