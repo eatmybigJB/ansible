@@ -20,4 +20,4 @@ for user in response['Users']:
         print(f'{attribute["Name"]}: {attribute["Value"]}')
 
 
-https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/get-started.html
+[https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/get-started.html](https://docs.aws.amazon.com/cognito/latest/developerguide/service_code_examples.html)
