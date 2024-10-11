@@ -18,3 +18,6 @@ for user in response['Users']:
     print(f'Username: {user["Username"]}')
     for attribute in user['Attributes']:
         print(f'{attribute["Name"]}: {attribute["Value"]}')
+
+
+https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/get-started.html
