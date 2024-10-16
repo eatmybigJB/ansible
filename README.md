@@ -1,31 +1,25 @@
 ```python
 import boto3
-import boto3
 
 # 创建 Cognito Identity Provider (IDP) 客户端
 client = boto3.client('cognito-idp')
 
-# 定义要使用的 Cognito 用户池 ID 和用户信息
+# 定义用户池 ID 和要确认的用户名
 user_pool_id = '<Your_User_Pool_ID>'
-username = 'new_user'
-temporary_password = 'TempPassword123!'  # 临时密码（需要符合 Cognito 密码策略）
+username = '<Username_To_Confirm>'
 
 try:
-    # 调用 admin_create_user 来创建用户
-    response = client.admin_create_user(
+    # 调用 admin_confirm_sign_up 来确认用户
+    response = client.admin_confirm_sign_up(
         UserPoolId=user_pool_id,
-        Username=username,
-        TemporaryPassword=temporary_password,
-        UserAttributes=[
-            {'Name': 'email', 'Value': 'user@example.com'},
-            {'Name': 'email_verified', 'Value': 'True'}
-        ],
-        MessageAction='SUPPRESS'  # 禁止 Cognito 自动发送邮件或短信（可选）
+        Username=username
     )
     
-    print("User created successfully:", response)
-    
-except client.exceptions.UsernameExistsException:
-    print(f"Username {username} already exists.")
+    print("User confirmed successfully:", response)
+
+except client.exceptions.UserNotFoundException:
+    print(f"User {username} does not exist.")
+except client.exceptions.NotAuthorizedException:
+    print(f"User {username} is already confirmed or cannot be confirmed.")
 except Exception as e:
-    print(f"Error creating user: {str(e)}")
+    print(f"Error confirming user: {str(e)}")
