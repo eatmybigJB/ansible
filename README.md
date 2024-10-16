@@ -1,28 +1,31 @@
 ```python
 import boto3
+import boto3
 
-def lambda_handler(event, context):
-    # 初始化 S3 客户端
-    s3 = boto3.client('s3')
+# 创建 Cognito Identity Provider (IDP) 客户端
+client = boto3.client('cognito-idp')
+
+# 定义要使用的 Cognito 用户池 ID 和用户信息
+user_pool_id = '<Your_User_Pool_ID>'
+username = 'new_user'
+temporary_password = 'TempPassword123!'  # 临时密码（需要符合 Cognito 密码策略）
+
+try:
+    # 调用 admin_create_user 来创建用户
+    response = client.admin_create_user(
+        UserPoolId=user_pool_id,
+        Username=username,
+        TemporaryPassword=temporary_password,
+        UserAttributes=[
+            {'Name': 'email', 'Value': 'user@example.com'},
+            {'Name': 'email_verified', 'Value': 'True'}
+        ],
+        MessageAction='SUPPRESS'  # 禁止 Cognito 自动发送邮件或短信（可选）
+    )
     
-    # 从事件中获取 S3 存储桶名称和要删除的对象键
-    bucket_name = event['bucket_name']  # S3 存储桶名称
-    object_key = event['object_key']    # 要删除的对象键（文件路径）
+    print("User created successfully:", response)
     
-    # 删除对象
-    try:
-        response = s3.delete_object(Bucket=bucket_name, Key=object_key)
-        
-        # 打印出删除操作的 response
-        print("Delete Object Response:", response)
-        
-        return {
-            'statusCode': 200,
-            'body': f"文件 '{object_key}' 已从存储桶 '{bucket_name}' 中成功删除。",
-            'response': response
-        }
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': f"删除文件时出错: {str(e)}"
-        }
+except client.exceptions.UsernameExistsException:
+    print(f"Username {username} already exists.")
+except Exception as e:
+    print(f"Error creating user: {str(e)}")
