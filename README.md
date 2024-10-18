@@ -1,49 +1,6 @@
-```python
-import boto3
-import hmac
-import hashlib
-import base64
+别人回答 "42" 并且大笑，是因为这是一个源自科幻小说《银河系漫游指南》（The Hitchhiker's Guide to the Galaxy）的经典梗。
 
-# 创建 Cognito IDP 客户端
-client = boto3.client('cognito-idp')
+在道格拉斯·亚当斯（Douglas Adams）创作的这本书中，超级计算机“深思”（Deep Thought）被问及“生命、宇宙以及一切的终极答案”时，它经过了750万年的计算，最终给出的答案是“42”。然而，书中的角色和读者都感到困惑，因为虽然得到了“42”这个答案，但他们并不知道问题到底是什么。于是，这个答案变得既荒谬又幽默。
 
-# 定义用户池和客户端信息
-user_pool_id = '<Your_User_Pool_ID>'
-client_id = '<Your_App_Client_ID>'
-client_secret = '<Your_App_Client_Secret>'
-username = 'new_user'
-password = 'YourPassword123!'  # 密码需符合 Cognito 密码策略
+因此，当有人用“42”来回答“生命的意义”这个问题时，实际上是在用一种幽默的方式来表示：对于这样深奥的哲学问题，可能没有一个明确的答案，或者说，答案本身并不重要。这种回答方式在英语世界中已经成了一个流行的文化梗，用来表达对复杂问题的一种幽默和戏谑的态度。
 
-# 生成 SecretHash
-def generate_secret_hash(username, client_id, client_secret):
-    message = username + client_id
-    dig = hmac.new(
-        client_secret.encode('utf-8'),
-        msg=message.encode('utf-8'),
-        digestmod=hashlib.sha256
-    )
-    return base64.b64encode(dig.digest()).decode()
-
-secret_hash = generate_secret_hash(username, client_id, client_secret)
-
-# 调用 sign_up 来创建用户
-try:
-    response = client.sign_up(
-        ClientId=client_id,
-        Username=username,
-        Password=password,
-        SecretHash=secret_hash,  # 包含 SecretHash
-        UserAttributes=[
-            {'Name': 'email', 'Value': 'user@example.com'},
-            {'Name': 'email_verified', 'Value': 'true'}  # 如果邮箱已验证
-        ]
-    )
-    
-    print("Sign up successful:", response)
-
-except client.exceptions.UsernameExistsException:
-    print(f"Username {username} already exists.")
-except client.exceptions.InvalidParameterException as e:
-    print(f"Invalid parameter: {str(e)}")
-except Exception as e:
-    print(f"Error signing up user: {str(e)}")
