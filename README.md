@@ -1,20 +1,23 @@
 ```python
-import os
 import boto3
 
-# 从环境变量中获取访问密钥和秘密密钥
-access_key = os.environ['AWS_ACCESS_KEY_ID']
-secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
-region_name = "your-region"
+# 创建 DynamoDB 资源
+dynamodb = boto3.resource('dynamodb')
 
-# 创建 DynamoDB 客户端
-dynamodb = boto3.client(
-    'dynamodb',
-    aws_access_key_id=access_key,
-    aws_secret_access_key=secret_key,
-    region_name=region_name
-)
+# 选择要插入数据的表
+table_name = 'YourTableName'
+table = dynamodb.Table(table_name)
 
-# 示例操作 - 列出 DynamoDB 表
-response = dynamodb.list_tables()
-print("DynamoDB Tables:", response['TableNames'])
+# 插入的数据
+item = {
+    'PrimaryKey': '123',  # 假设你的主键字段是 'PrimaryKey'
+    'Attribute1': 'Value1',
+    'Attribute2': 'Value2',
+    'Attribute3': 'Value3'
+}
+
+# 向 DynamoDB 表插入数据
+response = table.put_item(Item=item)
+
+# 打印响应
+print("PutItem succeeded:", response)
